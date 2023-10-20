@@ -47,15 +47,31 @@ const pointToLayerFunctions = [
 const onEachFeatureFunctions = [
   (feature, layer, index) => {
     // Add a click event handler for each layer
-    layer.on('click', function () {
-      // Check if there was a previously clicked layer
-      if (currentClickedLayer) {
-        // Reset the fill color of the previously clicked layer
-        // currentClickedLayer.setStyle({ fillColor: '#fff' });
-      }
+    layer.on('click', function (e) {
+      map.setView(e.latlng, 12);
 
-      // Update the currently clicked layer
-      currentClickedLayer = layer;
+      const stationId = e.target.feature.properties.uuid;
+      const stationDetails = `https://www.pegelonline.wsv.de/webservices/rest-api/v2/stations/${stationId}/W/currentmeasurement.json`;
+
+      fetchStationDetail(stationDetails).then((data) => {
+        const date = new Date(data.timestamp)
+        const time = date.toLocaleString('de', { timeZone: 'UTC' });
+
+        const stationValue = document.querySelector('#stationValue')
+        const stationValueTime = document.querySelector('#stationValueTime')
+        stationValue.innerText = `${data.value / 100} m über Pegelnullpunkt`
+        stationValueTime.innerText = `${time} Uhr`
+      })
+
+      let detailOutput = '';
+
+      detailOutput += `<li><strong>Stationsname</strong> ${e.target.feature.properties.longname}</li>`;
+      detailOutput += `<li><strong>Stationsnummer</strong> ${e.target.feature.properties.number}</li>`;
+      detailOutput += `<li><strong>Messwert</strong> <span id="stationValue">lädt</span></li>`;
+      detailOutput += `<li><strong>Messzeit</strong> <span id="stationValueTime">lädt</span></li>`;
+
+      const element = document.querySelector('#details');
+      element.innerHTML = `<ul class="p-3 space-y-2 bg-gray-700 text-white mb-4 md:mb-8"> ${detailOutput}</ul>`;
     });
   },
 ];
@@ -67,16 +83,16 @@ const map = L.map('map', {
   maxZoom: 19
 }).setView([53.89314, 11.45286], 8)
 
-L.tileLayer.wms('https://sgx.geodatenzentrum.de/wms_basemapde?SERVICE=WMS&Request=GetCapabilities', {
+/* L.tileLayer.wms('https://sgx.geodatenzentrum.de/wms_basemapde?SERVICE=WMS&Request=GetCapabilities', {
   layers: 'de_basemapde_web_raster_grau',
   maxZoom: 19, 
   attribution: '<a href="https://www.bkg.bund.de">GeoBasis-DE BKG</a> | <a href="https://creativecommons.org/licenses/by/4.0">CC BY 4.0</a>'
-}).addTo(map);
+}).addTo(map); */
 
-/* L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 19,
   attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-}).addTo(map); */
+}).addTo(map);
 
 // Create an array of jsonPromises for fetching JSON data
 const jsonPromises = jsonUrls.map((url, index) =>
@@ -150,6 +166,21 @@ Promise.all(geoJsonPromises)
   .catch((error) => {
     console.error('Error fetching GeoJSON data:', error);
   });
+
+function fetchStationDetail(url) {
+  return fetch(url, {
+    method: 'GET'
+  })
+  .then((response) => {
+    return response.json()
+  })
+  .then((data) => {
+    return data
+  })
+  .catch(function (error) {
+    console.error(error)
+  })
+}
 
 function removeLeadingZero(inputString) {
   if (inputString !== null && inputString.startsWith('0')) {
