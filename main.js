@@ -55,11 +55,15 @@ const onEachFeatureFunctions = [
 
       fetchStationDetail(stationDetails).then((data) => {
         const date = new Date(data.timestamp)
-        const time = date.toLocaleString('de', { timeZone: 'UTC' });
+        const time = date.toLocaleString('de', { timeZone: 'Europe/Berlin' });
 
         const stationValue = document.querySelector('#stationValue')
         const stationValueTime = document.querySelector('#stationValueTime')
-        stationValue.innerText = `${data.value / 100} m über Pegelnullpunkt`
+
+        const waterlevel = data.value / 100 - 5
+        const waterlevelRounded = waterlevel.toFixed(2)
+
+        stationValue.innerText = `${waterlevelRounded} m über Pegelnullpunkt`
         stationValueTime.innerText = `${time} Uhr`
       })
 
