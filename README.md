@@ -14,3 +14,19 @@ python3 download_stations.py 'https://www.pegelonline.wsv.de/webservices/rest-ap
 python3 download_details.py ../static/stations-ostsee.geojson
 deactivate
 ```
+
+
+---
+
+
+## How to Contribute
+
+Contributions are welcome! Please refer to the [CONTRIBUTING.md](CONTRIBUTING.md) guide for details on how to get involved.
+
+
+---
+
+
+## License
+
+This repository is licensed under [CC0-1.0](LICENSE).
